@@ -1,14 +1,28 @@
 "use client";
 import { JSX, useState } from "react";
+import axios from "axios";
 
 export default function LoginPage() : JSX.Element {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Logging in with:", { email, password });
-    // Add authentication logic here
+    try {
+      const response = await axios.post(
+        "http://localhost:8081/api/v1/users/login",
+        { email, password },
+        { withCredentials: true } // ✅ Allows storing cookies
+      );
+
+      console.log("Login successful:", response.data);
+      alert("Login successful!");
+      // Redirect or update UI based on login success
+    } catch (err: any) {
+      console.error("Login error:", err.response?.data || err.message);
+      // setError(err.response?.data?.message || "Login failed. Please try again.");
+    }
   };
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100">
