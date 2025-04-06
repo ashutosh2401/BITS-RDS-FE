@@ -1,5 +1,6 @@
 "use client";
-import React, { JSX, useState } from 'react'
+import React, { JSX, useState } from 'react';
+import axios from "axios";
 
 export default function RegisterPage() : JSX.Element {
   const [formData, setFormData] = useState({
@@ -11,6 +12,8 @@ export default function RegisterPage() : JSX.Element {
     position: "",
   });
 
+  const [loading, setLoading] = useState(false);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
@@ -18,14 +21,38 @@ export default function RegisterPage() : JSX.Element {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
       alert("Passwords do not match!");
       return;
     }
-    console.log("Registering:", formData);
-    // TODO: Send formData to backend API
+    
+
+    const requestBody = {
+      firstName: formData.fullName.split(" ")[0] || "",
+      lastName: formData.fullName.split(" ").slice(1).join(" ") || "",
+      email: formData.email,
+      password: formData.password,
+      employeeId: formData.employeeId,
+    };
+    console.log("Registering:", requestBody);
+    try {
+      // setLoading(true);
+      const response = await axios.post("http://localhost:8081/api/v1/users/register", requestBody, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      alert("Registration successful!");
+      console.log("Server Response:", response.data);
+    } catch (error: any) {
+      console.error("Registration failed:", error.response?.data || error.message);
+      alert(error.response?.data?.message || "Registration failed. Please try again.");
+    } finally {
+      // setLoading(false);
+    }
   };
 
   return (

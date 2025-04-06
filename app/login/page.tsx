@@ -11,7 +11,7 @@ export default function LoginPage() : JSX.Element {
     console.log("Logging in with:", { email, password });
     try {
       const response = await axios.post(
-        "http://localhost:8081/api/v1/users/login",
+        "http://localhost:8080/api/v1/users/login",
         { email, password },
         { withCredentials: true } // ✅ Allows storing cookies
       );
