@@ -1,60 +1,17 @@
-// "use client";
-
-// import { useState } from "react";
-// import { useRouter } from "next/navigation";
-
-// export default function ResumePage() {
-//   const router = useRouter();
-//   const [searchQuery, setSearchQuery] = useState("");
-
-//   const handleCreateNew = () => {
-//     router.push("/resume/new");
-//   };
-
-//   const handleSearch = (e) => {
-//     e.preventDefault();
-//     if (searchQuery.trim()) {
-//       router.push(`/resume/search?query=${encodeURIComponent(searchQuery)}`);
-//     }
-//   };
-
-//   return (
-//     <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-gray-50">
-//       <h1 className="text-2xl font-semibold mb-6">Manage Your Resumes</h1>
-//       <div className="w-full max-w-md bg-white shadow-lg rounded-xl p-6">
-//         {/* Create New Resume Button */}
-//         <button
-//           onClick={handleCreateNew}
-//           className="w-full bg-blue-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition"
-//         >
-//           ➕ Create New Resume
-//         </button>
-
-//         {/* Search Form */}
-//         <form onSubmit={handleSearch} className="flex gap-2 mt-4">
-//           <input
-//             type="text"
-//             placeholder="Search existing resumes..."
-//             value={searchQuery}
-//             onChange={(e) => setSearchQuery(e.target.value)}
-//             className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
-//           />
-//           <button
-//             type="submit"
-//             className="bg-gray-800 text-white font-medium py-2 px-4 rounded-lg hover:bg-gray-900 transition"
-//           >
-//             🔍 Search
-//           </button>
-//         </form>
-//       </div>
-//     </div>
-//   );
-// }
-
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import CreateResumeForm from "../components/CreateResumeForm";
+import axios from "axios";
+
+type Resume = {
+  id: string;
+  title: string;
+  vertical: string;
+  latestVersionId: string;
+  createdAt: string;
+};
 
 const verticals = [
   "Engineering",
@@ -68,6 +25,16 @@ const verticals = [
 export default function ResumePage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
+  const [resumes, setResumes] = useState<Resume[]>([]);
+
+  // Fetch resumes on page load
+  useEffect(() => {
+    axios
+      .get("http://localhost:8082/api/v1/resume")
+      .then((response) => setResumes(response.data))
+      .catch((error) => console.error("Failed to fetch resumes", error));
+  }, []);
+
 
   const handleCreateNew = () => {
     router.push("/resume/new");
@@ -84,51 +51,57 @@ export default function ResumePage() {
     router.push(`/resume/vertical/${vertical.toLowerCase()}`);
   };
 
+  const handleViewResume = (resumeId: string, versionId: string) => {
+    router.push(`/resume/${resumeId}/version/${versionId}`);
+  };
+
+  const handleNewVersion = (resumeId: string) => {
+    router.push(`/resume/${resumeId}/version/new`);
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-gray-50">
       <h1 className="text-2xl font-semibold mb-6">Manage Your Resumes</h1>
-      
-      <div className="w-full max-w-md bg-white shadow-lg rounded-xl p-6">
-        {/* Create New Resume Button */}
-        <button
-          onClick={handleCreateNew}
-          className="w-full bg-blue-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition"
-        >
-          ➕ Create New Resume
-        </button>
 
-        {/* Search Form */}
-        <form onSubmit={handleSearch} className="flex gap-2 mt-4">
-          <input
-            type="text"
-            placeholder="Search existing resumes..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
-          />
-          <button
-            type="submit"
-            className="bg-gray-800 text-white font-medium py-2 px-4 rounded-lg hover:bg-gray-900 transition"
-          >
-            🔍 Search
-          </button>
-        </form>
-      </div>
+      <CreateResumeForm
+        verticals={verticals}
+        employeeId="emp123" 
+        companyId="comp456"
+      />
 
-      {/* Vertical Selection */}
+      {/* My Resumes Section */}
       <div className="w-full max-w-md bg-white shadow-lg rounded-xl p-6 mt-6">
-        <h2 className="text-lg font-medium mb-4">Select a Vertical</h2>
-        <div className="grid grid-cols-2 gap-3">
-          {verticals.map((vertical) => (
-            <button
-              key={vertical}
-              onClick={() => handleVerticalClick(vertical)}
-              className="bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg hover:bg-gray-300 transition"
-            >
-              {vertical}
-            </button>
-          ))}
-        </div>
+        <h2 className="text-lg font-medium mb-4">My Resumes</h2>
+        {resumes.length === 0 ? (
+          <p className="text-gray-500">No resumes created yet.</p>
+        ) : (
+          <ul className="space-y-3">
+            {resumes.map((resume) => (
+              <li key={resume.id} className="border border-gray-200 p-3 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="font-semibold">{resume.title}</h3>
+                    <p className="text-sm text-gray-500">Vertical: {resume.vertical}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleViewResume(resume.id, resume.latestVersionId)}
+                      className="text-blue-600 hover:underline text-sm"
+                    >
+                      View
+                    </button>
+                    <button
+                      onClick={() => handleNewVersion(resume.id)}
+                      className="text-green-600 hover:underline text-sm"
+                    >
+                      ➕ New Version
+                    </button>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );
