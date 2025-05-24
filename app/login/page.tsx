@@ -1,8 +1,11 @@
 "use client";
+
+import { useRouter } from 'next/navigation';
 import { JSX, useState } from "react";
 import axios from "axios";
 
 export default function LoginPage() : JSX.Element {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -11,13 +14,13 @@ export default function LoginPage() : JSX.Element {
     console.log("Logging in with:", { email, password });
     try {
       const response = await axios.post(
-        "http://localhost:8080/api/v1/users/login",
+        "http://localhost:8081/api/v1/auth/login",
         { email, password },
-        { withCredentials: true } // ✅ Allows storing cookies
+        { withCredentials: true }
       );
 
       console.log("Login successful:", response.data);
-      alert("Login successful!");
+      router.push('/resume');
       // Redirect or update UI based on login success
     } catch (err: any) {
       console.error("Login error:", err.response?.data || err.message);

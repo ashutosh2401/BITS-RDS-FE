@@ -30,7 +30,9 @@ export default function ResumePage() {
   // Fetch resumes on page load
   useEffect(() => {
     axios
-      .get("http://localhost:8082/api/v1/resume")
+      .get("http://localhost:8081/api/v1/resume", {
+        withCredentials: true,
+      })
       .then((response) => setResumes(response.data))
       .catch((error) => console.error("Failed to fetch resumes", error));
   }, []);

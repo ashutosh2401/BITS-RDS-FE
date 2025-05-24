@@ -1,8 +1,8 @@
 "use client";
-import React, { JSX, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from "axios";
 
-export default function RegisterPage() : JSX.Element {
+export default function RegisterPage() {
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -10,15 +10,46 @@ export default function RegisterPage() : JSX.Element {
     confirmPassword: "",
     employeeId: "",
     position: "",
+    orgId: "",
+    verticalId: ""
   });
 
+  const [organizations, setOrganizations] = useState([]);
+  const [verticals, setVerticals] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value, // Dynamically update the field
-    });
+  useEffect(() => {
+    const fetchOrganizations = async () => {
+      try {
+        const response = await axios.get("http://localhost:8081/api/v1/organizations");
+        setOrganizations(response.data);
+      } catch (error) {
+        console.error("Failed to fetch organizations:", error);
+      }
+    };
+    fetchOrganizations();
+  }, []);
+
+  const fetchVerticals = async (orgId: string) => {
+    try {
+      const response = await axios.get(`http://localhost:8081/api/v1/verticals/by-org/${orgId}`);
+      setVerticals(response.data);
+    } catch (error) {
+      console.error("Failed to fetch verticals:", error);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    if (name === "orgId") {
+      setFormData(prev => ({ ...prev, verticalId: "" })); // reset vertical
+      fetchVerticals(value);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,7 +58,6 @@ export default function RegisterPage() : JSX.Element {
       alert("Passwords do not match!");
       return;
     }
-    
 
     const requestBody = {
       firstName: formData.fullName.split(" ")[0] || "",
@@ -35,23 +65,20 @@ export default function RegisterPage() : JSX.Element {
       email: formData.email,
       password: formData.password,
       employeeId: formData.employeeId,
+      orgId: formData.orgId,
+      verticalId: formData.verticalId,
     };
-    console.log("Registering:", requestBody);
-    try {
-      // setLoading(true);
-      const response = await axios.post("http://localhost:8081/api/v1/users/register", requestBody, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
 
+    try {
+      const response = await axios.post("http://localhost:8081/api/v1/auth/register", requestBody, {
+        headers: { "Content-Type": "application/json" },
+        withCredentials: true
+      });
       alert("Registration successful!");
       console.log("Server Response:", response.data);
     } catch (error: any) {
       console.error("Registration failed:", error.response?.data || error.message);
       alert(error.response?.data?.message || "Registration failed. Please try again.");
-    } finally {
-      // setLoading(false);
     }
   };
 
@@ -80,6 +107,47 @@ export default function RegisterPage() : JSX.Element {
               />
             </div>
           ))}
+
+          {/* Organization Dropdown */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Organization</label>
+            <select
+              name="orgId"
+              value={formData.orgId}
+              onChange={handleChange}
+              required
+              className="mt-1 block w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-300"
+            >
+              <option value="">Select Organization</option>
+              {organizations.map((org: any) => (
+                <option key={org.orgId} value={org.orgId}>
+                  {org.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Vertical Dropdown - only show if org is selected */}
+          {formData.orgId && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Vertical</label>
+              <select
+                name="verticalId"
+                value={formData.verticalId}
+                onChange={handleChange}
+                required
+                className="mt-1 block w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-300"
+              >
+                <option value="">Select Vertical</option>
+                {verticals.map((vert: any) => (
+                  <option key={vert.verticalId} value={vert.verticalId}>
+                    {vert.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <button
             type="submit"
             className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
@@ -87,6 +155,7 @@ export default function RegisterPage() : JSX.Element {
             Register
           </button>
         </form>
+
         <p className="mt-4 text-center text-sm text-gray-600">
           Already have an account?{" "}
           <a href="/login" className="text-blue-600 hover:underline">

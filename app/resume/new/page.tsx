@@ -152,7 +152,12 @@ export default function CreateResumePage() {
     };
     console.log("payload", payload);
     try {
-      await axios.post(`http://localhost:8082/api/v1/resume/${resumeId}/versions`, payload);
+      await axios.post(`http://localhost:8081/api/v1/resume/${resumeId}/versions`, 
+        payload,
+        {
+          withCredentials: true,
+        }
+      );
       router.push("/resume");
     } catch (error) {
       console.error("Resume submission failed:", error);

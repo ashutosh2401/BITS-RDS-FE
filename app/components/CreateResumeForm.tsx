@@ -27,12 +27,16 @@ export default function CreateResumeForm({
 
     try {
         console.log(employeeId, companyId, verticalId, title);
-        const res = await axios.post("http://localhost:8082/api/v1/resume", {
-            employeeId,
-            companyId,
-            verticalId,
-            title,
-        });
+        const res = await axios.post("http://localhost:8081/api/v1/resume", {
+                employeeId,
+                companyId,
+                verticalId,
+                title,
+            },
+            {
+                withCredentials: true,
+            }
+        );
 
         const createdResume = res.data;
         console.log(createdResume.id);
