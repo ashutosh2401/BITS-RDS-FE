@@ -37,28 +37,19 @@ export default function ResumePage() {
       .catch((error) => console.error("Failed to fetch resumes", error));
   }, []);
 
-
-  const handleCreateNew = () => {
-    router.push("/resume/new");
+  const handleResumeCreate = (resumeId: string) => {
+    axios.post(`http://localhost:8081/api/v1/resume/${resumeId}/versions`, {},{
+        withCredentials:true
+    })
+    .then((response) => {
+      router.push(`/resume/${resumeId}/version/${response.data?.versionId}`);
+    })
+    .catch((error) => console.error("Failed to create version", error));
+    
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/resume/search?query=${encodeURIComponent(searchQuery)}`);
-    }
-  };
-
-  const handleVerticalClick = (vertical: string) => {
-    router.push(`/resume/vertical/${vertical.toLowerCase()}`);
-  };
-
-  const handleViewResume = (resumeId: string, versionId: string) => {
+  const handleResumeUpdate = (resumeId: string, versionId: string) => {
     router.push(`/resume/${resumeId}/version/${versionId}`);
-  };
-
-  const handleNewVersion = (resumeId: string) => {
-    router.push(`/resume/${resumeId}/version/new`);
   };
 
   return (
@@ -87,13 +78,13 @@ export default function ResumePage() {
                   </div>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => handleViewResume(resume.id, resume.latestVersionId)}
+                      onClick={() => handleResumeUpdate(resume.id, resume.latestVersionId)}
                       className="text-blue-600 hover:underline text-sm"
                     >
                       View
                     </button>
                     <button
-                      onClick={() => handleNewVersion(resume.id)}
+                      onClick={() => handleResumeCreate(resume.id)}
                       className="text-green-600 hover:underline text-sm"
                     >
                       ➕ New Version
