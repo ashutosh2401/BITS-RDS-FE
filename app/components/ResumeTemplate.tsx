@@ -14,51 +14,31 @@ export const ResumeTemplate = () => {
     const [customSections, setCustomSections] = useState({});
 
     useEffect(() => {
-        const fetchVersionData = async () => {
-            try {
-                const response = await axios.get(`http://localhost:8081/api/v1/resume/${resumeId}/versions/${versionId}`, {
-                    withCredentials: true
-                });
+    const fetchVersionData = async () => {
+        try {
+            const response = await axios.get(`http://localhost:8081/api/v1/resume/${resumeId}/versions/${versionId}`, {
+                withCredentials: true
+            });
 
-                const version = response.data;
+            const version = response.data;
 
-                setName(version.name || "");
-                setEmail(version.email || "");
-                setPhone(version.phone || "");
-                setSkills(version.skills?.join(", ") || "");
+            setName(version.name || "");
+            setEmail(version.email || "");
+            setPhone(version.phone || "");
+            setSkills(version.skills?.join(", ") || "");
 
-                // experience strings mapped to editable fields
-                setExperiences(
-                    version.experiences?.map((desc) => ({
-                        company: "",
-                        role: "",
-                        from: "",
-                        to: "",
-                        location: "",
-                        description: desc
-                    })) || []
-                );
-
-                setEducation(
-                    version.education?.map((desc) => ({
-                        institution: "",
-                        degree: "",
-                        from: "",
-                        to: "",
-                        location: ""
-                    })) || []
-                );
-
-                setCustomSections(version.customSections || {});
-            } catch (err) {
-                console.error("Failed to fetch version data:", err);
-            }
-        };
-
-        if (resumeId && versionId) {
-            fetchVersionData();
+            setExperiences(version.experiences || []);
+            setEducation(version.education || []);
+            setCustomSections(version.customSections || {});
+        } catch (err) {
+            console.error("Failed to fetch version data:", err);
         }
-    }, [resumeId, versionId]);
+    };
+
+    if (resumeId && versionId) {
+        fetchVersionData();
+    }
+}, [resumeId, versionId]);
 
 
     // Helper handlers

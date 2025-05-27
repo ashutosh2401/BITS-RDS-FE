@@ -21,6 +21,29 @@ interface ValidationRequest {
 
 const ValidationRequestsPage: React.FC = () => {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
+    const [showPreviewModal, setShowPreviewModal] = useState(false);
+    const [previewContent, setPreviewContent] = useState<any | null>(null);
+    const [previewVersionId, setPreviewVersionId] = useState<string | null>(null);
+
+    const openPreviewModal = async (versionId: string) => {
+      try {
+        const response = await axios.get(`http://localhost:8081/api/v1/resume/preview/${versionId}`, {
+          withCredentials: true,
+        });
+        setPreviewContent(response.data); // Store full resume object
+        setPreviewVersionId(versionId);
+        setShowPreviewModal(true);
+      } catch (err) {
+        alert("Failed to fetch resume preview.");
+      }
+    };
+
+    const closePreviewModal = () => {
+      setShowPreviewModal(false);
+      setPreviewContent(null);
+      setPreviewVersionId(null);
+    };
+
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -159,7 +182,17 @@ const ValidationRequestsPage: React.FC = () => {
           {requests.map((req) => (
             <tr key={req.versionId}>
               <td>{req.resumeId}</td>
-              <td>{req.versionId}</td>
+              <td>
+                {currentUser?.role === "ADMIN" ? (
+                  <button style={{ color: "blue", textDecoration: "underline", background: "none", border: "none", cursor: "pointer" }}
+                    onClick={() => openPreviewModal(req.versionId)}
+                  >
+                    {req.versionId}
+                  </button>
+                ) : (
+                  req.versionId
+                )}
+              </td>
               <td>{req.accepted ? "Yes" : "No"}</td>
               <td>{req.accepted ? req.acceptorUserId || "Unknown" : "-"}</td>
               <td>
@@ -253,7 +286,76 @@ const ValidationRequestsPage: React.FC = () => {
           </div>
         </div>
       )}
+      {showPreviewModal && previewContent && (
+  <div
+    style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100vw",
+      height: "100vh",
+      background: "rgba(0,0,0,0.5)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 9999,
+    }}
+    onClick={closePreviewModal}
+  >
+    <div
+      style={{
+        background: "#fff",
+        padding: 20,
+        borderRadius: 8,
+        minWidth: 600,
+        maxHeight: "80vh",
+        overflowY: "auto",
+        position: "relative",
+      }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <h2>Resume Preview</h2>
+      <p><strong>Name:</strong> {previewContent.name}</p>
+      <p><strong>Email:</strong> {previewContent.email}</p>
+      <p><strong>Phone:</strong> {previewContent.phone}</p>
+      
+      <h3>Skills</h3>
+      <ul>
+        {previewContent.skills?.map((skill: string, i: number) => (
+          <li key={i}>{skill}</li>
+        ))}
+      </ul>
+
+      <h3>Experience</h3>
+      <ul>
+        {previewContent.experiences?.map((exp: any, i: number) => (
+          <li key={i}>
+            <strong>{exp.role}</strong> at {exp.company} ({exp.from} - {exp.to})<br />
+            {exp.location}
+          </li>
+        ))}
+      </ul>
+
+      <h3>Education</h3>
+      <ul>
+        {previewContent.education?.map((edu: any, i: number) => (
+          <li key={i}>
+            <strong>{edu.degree}</strong> - {edu.institution} ({edu.from} - {edu.to})<br />
+            {edu.location}
+          </li>
+        ))}
+      </ul>
+
+      <div style={{ marginTop: 20 }}>
+        <button onClick={closePreviewModal}>Close</button>
+      </div>
     </div>
+  </div>
+)}
+
+    </div>
+    
+
   );
 };
 

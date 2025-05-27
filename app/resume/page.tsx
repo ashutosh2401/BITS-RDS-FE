@@ -45,6 +45,7 @@ export default function ResumePage() {
         const resumesRes = await axios.get("http://localhost:8081/api/v1/resume", {
           withCredentials: true,
         });
+        console.log("Resumes API Response:", resumesRes.data);
         setResumes(resumesRes.data);
 
         // Fetch verticals by organization
@@ -70,14 +71,15 @@ export default function ResumePage() {
         {},
         { withCredentials: true }
       );
-      router.push(`/resume/${resumeId}/version/${res.data?.versionId}`);
+      router.push(`/resume/${resumeId}/versions/${res.data?.versionId}`);
     } catch (error) {
       console.error("Failed to create version", error);
     }
   };
 
   const handleResumeUpdate = (resumeId: string, versionId: string) => {
-    router.push(`/resume/${resumeId}/version/${versionId}`);
+    console.log(resumeId, versionId);
+    router.push(`/resume/${resumeId}/versions/${versionId}`);
   };
 
   if (isLoading || !authUser) {
@@ -106,7 +108,7 @@ export default function ResumePage() {
                   <div>
                     <h3 className="font-semibold">{resume.title}</h3>
                     <p className="text-sm text-gray-500">
-                      Vertical: {resume.vertical}
+                      Vertical: {resume.verticalId}
                     </p>
                   </div>
                   <div className="flex gap-2">
