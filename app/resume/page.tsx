@@ -122,6 +122,12 @@ export default function ResumePage() {
                     >
                       ➕ New Version
                     </button>
+                    <button
+                      onClick={() => router.push(`/resume/${resume.id}/versions`)}
+                      className="text-purple-600 hover:underline text-sm"
+                    >
+                      📜 View Versions
+                    </button>
                   </div>
                 </div>
               </li>
