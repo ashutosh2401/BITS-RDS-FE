@@ -1,27 +1,14 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import axios from 'axios';
 import { useRouter } from 'next/navigation';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext'; // ✅ Import the hook
 
 export default function NavBar() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        await axios.get('http://localhost:8081/api/v1/auth/me', {
-          withCredentials: true,
-        });
-        setIsAuthenticated(true);
-      } catch (err) {
-        setIsAuthenticated(false);
-      }
-    };
-    checkAuth();
-  }, []);
+  const { isAuthenticated, setIsAuthenticated } = useAuth(); // ✅ Get auth state from context
 
   const handleLogout = async () => {
     try {
@@ -41,8 +28,15 @@ export default function NavBar() {
         <Link href="/" className="text-xl font-bold">
           ResumeDB
         </Link>
+
         <ul className="flex space-x-4">
           <li><Link href="/resume">Resume</Link></li>
+
+          {isAuthenticated && (
+            <li>
+              <Link href="/validation-requests">Validation Requests</Link>
+            </li>
+          )}
         </ul>
 
         <ul className="flex space-x-4">

@@ -4,8 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 
+interface Vertical {
+  id: string;
+  name: string;
+}
+
 interface CreateResumeFormProps {
-  verticals: string[];
+  verticals: Vertical[];
   employeeId: string;
   companyId: string;
 }
@@ -21,34 +26,29 @@ export default function CreateResumeForm({
 
   const handleCreate = async () => {
     if (!title || !verticalId) {
-        alert("Please fill in all fields.");
-        return;
+      alert("Please fill in all fields.");
+      return;
     }
 
     try {
-        console.log(employeeId, companyId, verticalId, title);
-        const res = await axios.post("http://localhost:8081/api/v1/resume", {
-                employeeId,
-                companyId,
-                verticalId,
-                title,
-            },
-            {
-                withCredentials: true,
-            }
-        );
+      const res = await axios.post(
+        "http://localhost:8081/api/v1/resume",
+        {
+          employeeId,
+          companyId,
+          verticalId,
+          title,
+        },
+        { withCredentials: true }
+      );
 
-        const createdResume = res.data;
-        console.log(createdResume.id);
-
-        // Redirect to /resume/new with resumeId
-        router.push(`/resume/new?resumeId=${createdResume.id}`);
+      const createdResume = res.data;
+      router.push(`/resume/new?resumeId=${createdResume.id}`);
     } catch (error) {
-        console.error("Error creating resume:", error);
-        alert("Resume creation failed");
+      console.error("Error creating resume:", error);
+      alert("Resume creation failed");
     }
-    };
-
+  };
 
   return (
     <div className="w-full max-w-md bg-white shadow-lg rounded-xl p-6 mt-6">
@@ -62,18 +62,20 @@ export default function CreateResumeForm({
         className="w-full mb-3 border border-gray-300 rounded-lg px-3 py-2"
       />
 
-      <select
-        value={verticalId}
-        onChange={(e) => setVerticalId(e.target.value)}
-        className="w-full mb-4 border border-gray-300 rounded-lg px-3 py-2"
-      >
-        <option value="">Select a vertical</option>
-        {verticals.map((vertical) => (
-          <option key={vertical} value={vertical}>
-            {vertical}
-          </option>
-        ))}
-      </select>
+        <select
+            value={verticalId}
+                onChange={(e) => setVerticalId(e.target.value)}
+                className="w-full mb-4 border border-gray-300 rounded-lg px-3 py-2"
+            >
+            <option value="">Select a vertical</option>
+                {verticals
+                    .filter((v): v is Vertical => v !== undefined && v !== null)
+                    .map((vertical) => (
+                    <option key={vertical.id} value={vertical.id}>
+                        {vertical.name}
+                    </option>
+                ))}
+        </select>
 
       <button
         onClick={handleCreate}

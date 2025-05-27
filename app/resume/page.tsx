@@ -13,44 +13,76 @@ type Resume = {
   createdAt: string;
 };
 
-const verticals = [
-  "Engineering",
-  "Marketing",
-  "Sales",
-  "HR",
-  "Finance",
-  "Design",
-];
+type Vertical = {
+  id: string;
+  name: string;
+};
+
+type AuthUser = {
+  employeeId: string;
+  companyId: string;
+};
 
 export default function ResumePage() {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [resumes, setResumes] = useState<Resume[]>([]);
 
-  // Fetch resumes on page load
+  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
+  const [resumes, setResumes] = useState<Resume[]>([]);
+  const [verticals, setVerticals] = useState<Vertical[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
-    axios
-      .get("http://localhost:8081/api/v1/resume", {
-        withCredentials: true,
-      })
-      .then((response) => setResumes(response.data))
-      .catch((error) => console.error("Failed to fetch resumes", error));
+    const fetchAuthAndData = async () => {
+      try {
+        // Fetch authenticated user details
+        const authRes = await axios.get("http://localhost:8081/api/v1/auth/me", {
+          withCredentials: true,
+        });
+        const { employeeId, companyId } = authRes.data;
+        setAuthUser({ employeeId, companyId });
+
+        // Fetch resumes
+        const resumesRes = await axios.get("http://localhost:8081/api/v1/resume", {
+          withCredentials: true,
+        });
+        setResumes(resumesRes.data);
+
+        // Fetch verticals by organization
+        const verticalsRes = await axios.get(
+          `http://localhost:8081/api/v1/verticals/by-org/${companyId}`,
+          { withCredentials: true }
+        );
+        setVerticals(verticalsRes.data);
+      } catch (error) {
+        console.error("Failed to fetch initial data", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAuthAndData();
   }, []);
 
-  const handleResumeCreate = (resumeId: string) => {
-    axios.post(`http://localhost:8081/api/v1/resume/${resumeId}/versions`, {},{
-        withCredentials:true
-    })
-    .then((response) => {
-      router.push(`/resume/${resumeId}/version/${response.data?.versionId}`);
-    })
-    .catch((error) => console.error("Failed to create version", error));
-    
+  const handleResumeCreate = async (resumeId: string) => {
+    try {
+      const res = await axios.post(
+        `http://localhost:8081/api/v1/resume/${resumeId}/versions`,
+        {},
+        { withCredentials: true }
+      );
+      router.push(`/resume/${resumeId}/version/${res.data?.versionId}`);
+    } catch (error) {
+      console.error("Failed to create version", error);
+    }
   };
 
   const handleResumeUpdate = (resumeId: string, versionId: string) => {
     router.push(`/resume/${resumeId}/version/${versionId}`);
   };
+
+  if (isLoading || !authUser) {
+    return <p className="text-center mt-10">Loading...</p>;
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-gray-50">
@@ -58,11 +90,10 @@ export default function ResumePage() {
 
       <CreateResumeForm
         verticals={verticals}
-        employeeId="emp123" 
-        companyId="comp456"
+        employeeId={authUser.employeeId}
+        companyId={authUser.companyId}
       />
 
-      {/* My Resumes Section */}
       <div className="w-full max-w-md bg-white shadow-lg rounded-xl p-6 mt-6">
         <h2 className="text-lg font-medium mb-4">My Resumes</h2>
         {resumes.length === 0 ? (
@@ -74,7 +105,9 @@ export default function ResumePage() {
                 <div className="flex justify-between items-center">
                   <div>
                     <h3 className="font-semibold">{resume.title}</h3>
-                    <p className="text-sm text-gray-500">Vertical: {resume.vertical}</p>
+                    <p className="text-sm text-gray-500">
+                      Vertical: {resume.vertical}
+                    </p>
                   </div>
                   <div className="flex gap-2">
                     <button

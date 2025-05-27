@@ -1,32 +1,34 @@
-"use client";
+'use client';
 
 import { useRouter } from 'next/navigation';
-import { JSX, useState } from "react";
-import axios from "axios";
+import { useState } from 'react';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext'; 
 
-export default function LoginPage() : JSX.Element {
+export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const { setIsAuthenticated } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Logging in with:", { email, password });
     try {
       const response = await axios.post(
-        "http://localhost:8081/api/v1/auth/login",
+        'http://localhost:8081/api/v1/auth/login',
         { email, password },
         { withCredentials: true }
       );
+      console.log('Login successful:', response.data);
 
-      console.log("Login successful:", response.data);
-      router.push('/resume');
-      // Redirect or update UI based on login success
+      setIsAuthenticated(true);
+      router.push('/resume');  
     } catch (err: any) {
-      console.error("Login error:", err.response?.data || err.message);
-      // setError(err.response?.data?.message || "Login failed. Please try again.");
+      console.error('Login error:', err.response?.data || err.message);
+      // Optionally show user-facing error message
     }
   };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100">
       <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-lg">
@@ -60,9 +62,9 @@ export default function LoginPage() : JSX.Element {
           </button>
         </form>
         <p className="mt-4 text-center text-sm text-gray-600">
-          Don't have an account? <a href="/register" className="text-blue-600 hover:underline">Register Here</a>
+          Don&apos;t have an account? <a href="/register" className="text-blue-600 hover:underline">Register Here</a>
         </p>
       </div>
     </div>
-  )
+  );
 }
